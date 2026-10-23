@@ -1,64 +1,5 @@
 import SwiftUI
 
-// MARK: - Tema visual (plata / hielo, combina con el fondo)
-
-private enum IDKTheme {
-    /// Nombre del asset de la imagen de fondo (Assets.xcassets)
-    static let backgroundImageName = "IDKBackground"
-
-    static let ink = Color(red: 0.09, green: 0.11, blue: 0.17)
-    static let inkSoft = Color(red: 0.09, green: 0.11, blue: 0.17).opacity(0.55)
-    static let inkFaint = Color(red: 0.09, green: 0.11, blue: 0.17).opacity(0.35)
-
-    static let silverLight = Color.white
-    static let silverMid = Color(red: 0.80, green: 0.83, blue: 0.88)
-    static let silverDark = Color(red: 0.55, green: 0.60, blue: 0.68)
-
-    static let accent = Color(red: 0.28, green: 0.52, blue: 0.86)
-    static let warning = Color(red: 0.92, green: 0.58, blue: 0.20)
-
-    static var silverStroke: LinearGradient {
-        LinearGradient(
-            colors: [silverLight.opacity(0.95), silverMid.opacity(0.55), silverLight.opacity(0.85)],
-            startPoint: .topLeading,
-            endPoint: .bottomTrailing
-        )
-    }
-}
-
-// MARK: - Estilo "cristal" reutilizable
-
-private struct IDKGlass: ViewModifier {
-    var radius: CGFloat = 16
-    var tint: Color = Color.white.opacity(0.30)
-    var strokeColor: AnyShapeStyle = AnyShapeStyle(IDKTheme.silverStroke)
-
-    func body(content: Content) -> some View {
-        content
-            .background(
-                RoundedRectangle(cornerRadius: radius, style: .continuous)
-                    .fill(.ultraThinMaterial)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: radius, style: .continuous)
-                            .fill(tint)
-                    )
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: radius, style: .continuous)
-                    .strokeBorder(strokeColor, lineWidth: 1)
-            )
-            .shadow(color: IDKTheme.silverDark.opacity(0.25), radius: 12, x: 0, y: 6)
-    }
-}
-
-private extension View {
-    func idkGlass(radius: CGFloat = 16,
-                  tint: Color = Color.white.opacity(0.30),
-                  stroke: AnyShapeStyle = AnyShapeStyle(IDKTheme.silverStroke)) -> some View {
-        modifier(IDKGlass(radius: radius, tint: tint, strokeColor: stroke))
-    }
-}
-
 // MARK: - Selección de modo
 
 struct ModeSelectionView: View {
@@ -67,12 +8,9 @@ struct ModeSelectionView: View {
     @State private var appeared = false
     @State private var showAdvancedSettings = false
     
-    // MARK: - TÍTULO
-    private let title = "IDK"
     private let subtitle = "Selecciona tu versión del juego"
-    private let madeBy = "Hecho por didierxitx7"
     
-    // MARK: - Key Helpers (SIN CAMBIOS)
+    // MARK: - Key Helpers (SIN CAMBIOS en la lógica)
     
     private var keyDisplayName: String {
         supabase.currentKey?.keyValue ?? "SIN KEY"
@@ -138,46 +76,40 @@ struct ModeSelectionView: View {
         return nil
     }
     
-    /// Mismos estados que antes (baneada / por vencer / ok). Solo ajusté los
-    /// colores neutros para que se lean sobre el cristal claro.
     private var keyStatusColor: Color {
-        guard let key = supabase.currentKey else { return IDKTheme.inkSoft }
+        guard let key = supabase.currentKey else { return JokerTheme.textSoft }
         
         if key.isBanned {
-            return Color(red: 0.8, green: 0.3, blue: 0.3) // Rojo suave
+            return JokerTheme.danger
         }
         
         if let expiresAt = key.expiresAt,
            let date = parseSupabaseDate(expiresAt) {
             let days = Calendar.current.dateComponents([.day], from: Date(), to: date).day ?? 0
             if days < 0 {
-                return Color(red: 0.8, green: 0.3, blue: 0.3)
+                return JokerTheme.danger
             }
             if days <= 3 {
-                return Color(red: 0.85, green: 0.65, blue: 0.3) // Naranja suave
+                return JokerTheme.warning
             }
         }
         
-        return IDKTheme.accent // Azul hielo (antes blanco perla)
+        return JokerTheme.ok
     }
     
     // MARK: - Body
     
     var body: some View {
         ZStack {
-            background
+            JokerBackground()
             
             ScrollView(showsIndicators: false) {
                 VStack(spacing: 0) {
-                    Spacer().frame(height: 20)
+                    Spacer().frame(height: 16)
                     
-                    logoHeader
+                    header
                     
-                    Spacer().frame(height: 10)
-                    
-                    titleSection
-                    
-                    // Espacio para dejar ver al ángel y el logo de la imagen
+                    // Espacio para dejar ver la foto del Joker
                     Spacer().frame(height: 150)
                     
                     subtitlePill
@@ -203,18 +135,20 @@ struct ModeSelectionView: View {
                     }
                     .padding(.horizontal, 20)
                     
-                    Spacer().frame(height: 20)
+                    Spacer().frame(height: 16)
                     
                     profileCard
                         .padding(.horizontal, 20)
                     
-                    Spacer().frame(height: 24)
+                    Spacer().frame(height: 20)
                     
                     advancedSettingsButton
                     
-                    Spacer().frame(height: 40)
+                    Spacer().frame(height: 28)
                     
-                    footerSection
+                    JokerSignature()
+                        .opacity(appeared ? 1 : 0)
+                        .animation(.easeOut(duration: 0.4).delay(0.5), value: appeared)
                     
                     Spacer().frame(height: 30)
                 }
@@ -227,97 +161,52 @@ struct ModeSelectionView: View {
         }
     }
     
-    // MARK: - Background (imagen fija de fondo)
+    // MARK: - Header (icono + nombre)
     
-    private var background: some View {
-        ZStack {
-            // Color base por si la imagen no carga
-            Color(red: 0.88, green: 0.90, blue: 0.94)
-                .ignoresSafeArea()
+    private var header: some View {
+        HStack(spacing: 14) {
+            JokerAppIcon(size: 56)
             
-            // Imagen a pantalla completa, sin deformarse
-            Color.clear
-                .overlay(
-                    Image(IDKTheme.backgroundImageName)
-                        .resizable()
-                        .scaledToFill()
-                )
-                .clipped()
-                .ignoresSafeArea()
+            VStack(alignment: .leading, spacing: 3) {
+                Text("ANGEL EXTERNAL")
+                    .font(.system(size: 24, weight: .heavy, design: .rounded))
+                    .foregroundStyle(JokerTheme.text)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.7)
+                Text("PATCH LIBRARY")
+                    .font(.system(size: 11, weight: .semibold))
+                    .tracking(1.5)
+                    .foregroundStyle(JokerTheme.textSoft)
+            }
             
-            // Velo suave abajo para que el contenido se lea bien
-            LinearGradient(
-                stops: [
-                    .init(color: Color.white.opacity(0.0), location: 0.0),
-                    .init(color: Color.white.opacity(0.10), location: 0.45),
-                    .init(color: Color.white.opacity(0.35), location: 1.0)
-                ],
-                startPoint: .top,
-                endPoint: .bottom
-            )
-            .ignoresSafeArea()
+            Spacer()
+            
+            VStack(spacing: 4) {
+                Circle()
+                    .fill(JokerTheme.ok)
+                    .frame(width: 8, height: 8)
+                    .shadow(color: JokerTheme.ok.opacity(0.7), radius: 4)
+                Text("LISTO")
+                    .font(.system(size: 10, weight: .heavy))
+                    .tracking(1)
+                    .foregroundStyle(JokerTheme.ok)
+            }
         }
-    }
-    
-    // MARK: - Logo Header (compacto, plata)
-    
-    private var logoHeader: some View {
-        ZStack {
-            Circle()
-                .fill(
-                    RadialGradient(
-                        colors: [Color.white.opacity(0.9), Color.clear],
-                        center: .center,
-                        startRadius: 12,
-                        endRadius: 52
-                    )
-                )
-                .frame(width: 104, height: 104)
-            
-            Circle()
-                .strokeBorder(IDKTheme.silverStroke, lineWidth: 2.5)
-                .frame(width: 70, height: 70)
-                .shadow(color: Color.white.opacity(0.9), radius: 12)
-            
-            Image("Logo")
-                .resizable()
-                .scaledToFit()
-                .frame(width: 54, height: 54)
-                .clipShape(Circle())
-                .shadow(color: .black.opacity(0.15), radius: 4)
-        }
+        .padding(.horizontal, 20)
         .opacity(appeared ? 1 : 0)
-        .scaleEffect(appeared ? 1 : 0.92)
         .animation(.easeOut(duration: 0.5).delay(0.05), value: appeared)
     }
     
-    // MARK: - Title
-    
-    private var titleSection: some View {
-        Text(title)
-            .font(.system(size: 22, weight: .heavy, design: .rounded))
-            .tracking(5)
-            .foregroundStyle(IDKTheme.ink.opacity(0.85))
-            .shadow(color: Color.white.opacity(0.9), radius: 6)
-            .opacity(appeared ? 1 : 0)
-            .animation(.easeOut(duration: 0.5).delay(0.1), value: appeared)
-    }
-    
-    // MARK: - Subtítulo en cápsula de cristal
+    // MARK: - Subtítulo
     
     private var subtitlePill: some View {
         Text(subtitle)
             .font(.system(size: 13, weight: .semibold))
-            .foregroundStyle(IDKTheme.ink.opacity(0.8))
+            .foregroundStyle(JokerTheme.text.opacity(0.85))
             .padding(.horizontal, 16)
             .padding(.vertical, 8)
-            .background(
-                Capsule()
-                    .fill(.ultraThinMaterial)
-                    .overlay(Capsule().fill(Color.white.opacity(0.30)))
-            )
-            .overlay(Capsule().strokeBorder(IDKTheme.silverStroke, lineWidth: 1))
-            .shadow(color: IDKTheme.silverDark.opacity(0.2), radius: 8, y: 4)
+            .background(Capsule().fill(JokerTheme.cardBase.opacity(0.85)))
+            .overlay(Capsule().strokeBorder(JokerTheme.cardStroke, lineWidth: 1))
             .opacity(appeared ? 1 : 0)
             .animation(.easeOut(duration: 0.4).delay(0.1), value: appeared)
     }
@@ -342,30 +231,25 @@ struct ModeSelectionView: View {
                 
                 VStack(alignment: .leading, spacing: 4) {
                     Text(title)
-                        .font(.system(size: 16, weight: .heavy, design: .rounded))
-                        .foregroundStyle(IDKTheme.ink)
-                        .tracking(0.5)
+                        .font(.system(size: 17, weight: .heavy, design: .rounded))
+                        .foregroundStyle(JokerTheme.text)
                     
                     Text(subtitle)
-                        .font(.system(size: 11, weight: .medium))
-                        .foregroundStyle(IDKTheme.inkSoft)
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundStyle(JokerTheme.textSoft)
                 }
                 
                 Spacer()
                 
-                ZStack {
-                    Circle()
-                        .fill(Color.white.opacity(0.6))
-                        .overlay(Circle().strokeBorder(IDKTheme.silverStroke, lineWidth: 1))
-                        .frame(width: 30, height: 30)
-                    Image(systemName: "chevron.right")
-                        .font(.system(size: 12, weight: .bold))
-                        .foregroundStyle(IDKTheme.ink.opacity(0.6))
-                }
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 13, weight: .bold))
+                    .foregroundStyle(JokerTheme.accent)
+                    .frame(width: 32, height: 32)
+                    .background(Circle().fill(JokerTheme.accent.opacity(0.14)))
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 14)
-            .idkGlass(radius: 18)
+            .jokerCard(radius: 20)
         }
         .buttonStyle(ScaleButtonStyle())
         .opacity(appeared ? 1 : 0)
@@ -376,37 +260,33 @@ struct ModeSelectionView: View {
     @ViewBuilder
     private func gameIcon(name: String, mode: FFMode) -> some View {
         ZStack {
-            RoundedRectangle(cornerRadius: 12, style: .continuous)
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
                 .fill(
                     LinearGradient(
                         colors: mode == .normal
-                            ? [IDKTheme.warning.opacity(0.30), IDKTheme.warning.opacity(0.10)]
-                            : [Color.white.opacity(0.9), IDKTheme.silverMid.opacity(0.55)],
+                            ? [JokerTheme.warning.opacity(0.30), JokerTheme.warning.opacity(0.10)]
+                            : [JokerTheme.accent.opacity(0.30), JokerTheme.accentDeep.opacity(0.12)],
                         startPoint: .topLeading,
                         endPoint: .bottomTrailing
                     )
                 )
-                .frame(width: 48, height: 48)
+                .frame(width: 52, height: 52)
             
             if UIImage(named: name) != nil {
                 Image(name)
                     .resizable()
                     .scaledToFill()
-                    .frame(width: 48, height: 48)
-                    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                    .frame(width: 52, height: 52)
+                    .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
             } else {
                 Image(systemName: mode == .normal ? "flame.fill" : "bolt.fill")
                     .font(.system(size: 22, weight: .bold))
-                    .foregroundStyle(
-                        mode == .normal
-                            ? IDKTheme.warning
-                            : IDKTheme.accent
-                    )
+                    .foregroundStyle(mode == .normal ? JokerTheme.warning : JokerTheme.accent)
             }
         }
         .overlay(
-            RoundedRectangle(cornerRadius: 12, style: .continuous)
-                .strokeBorder(Color.white.opacity(0.85), lineWidth: 1)
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .strokeBorder(Color.white.opacity(0.12), lineWidth: 1)
         )
     }
     
@@ -416,30 +296,24 @@ struct ModeSelectionView: View {
         HStack(spacing: 12) {
             ZStack {
                 Circle()
-                    .fill(
-                        LinearGradient(
-                            colors: [Color.white.opacity(0.95), IDKTheme.silverMid.opacity(0.7)],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
-                    )
-                    .overlay(Circle().strokeBorder(IDKTheme.silverStroke, lineWidth: 1))
+                    .fill(Color.white.opacity(0.08))
+                    .overlay(Circle().strokeBorder(JokerTheme.cardStroke, lineWidth: 1))
                     .frame(width: 40, height: 40)
                 
                 Image(systemName: "person.fill")
                     .font(.system(size: 18, weight: .semibold))
-                    .foregroundStyle(IDKTheme.ink.opacity(0.75))
+                    .foregroundStyle(JokerTheme.bone)
             }
             
             VStack(alignment: .leading, spacing: 3) {
                 Text(keyDisplayName)
                     .font(.system(size: 14, weight: .bold, design: .monospaced))
-                    .foregroundStyle(IDKTheme.ink)
+                    .foregroundStyle(JokerTheme.text)
                     .lineLimit(1)
                 
                 Text(supabase.currentKey?.label ?? "Usuario")
-                    .font(.system(size: 10, weight: .medium))
-                    .foregroundStyle(IDKTheme.inkSoft)
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundStyle(JokerTheme.textSoft)
                     .lineLimit(1)
             }
             
@@ -450,16 +324,12 @@ struct ModeSelectionView: View {
                 .foregroundStyle(keyStatusColor)
                 .padding(.horizontal, 12)
                 .padding(.vertical, 6)
-                .background(
-                    Capsule()
-                        .fill(Color.white.opacity(0.55))
-                        .overlay(Capsule().fill(keyStatusColor.opacity(0.12)))
-                        .overlay(Capsule().stroke(keyStatusColor.opacity(0.45), lineWidth: 1))
-                )
+                .background(Capsule().fill(keyStatusColor.opacity(0.14)))
+                .overlay(Capsule().stroke(keyStatusColor.opacity(0.45), lineWidth: 1))
         }
-        .padding(.horizontal, 14)
-        .padding(.vertical, 12)
-        .idkGlass(radius: 18)
+        .padding(.horizontal, 16)
+        .padding(.vertical, 14)
+        .jokerCard(radius: 20, stroke: keyStatusColor.opacity(0.30))
         .opacity(appeared ? 1 : 0)
         .offset(y: appeared ? 0 : 15)
         .animation(.easeOut(duration: 0.4).delay(0.3), value: appeared)
@@ -475,35 +345,19 @@ struct ModeSelectionView: View {
                 Image(systemName: "gearshape.fill")
                     .font(.system(size: 12, weight: .semibold))
                 Text("Ajustes avanzados")
-                    .font(.system(size: 12, weight: .semibold))
+                    .font(.system(size: 13, weight: .semibold))
             }
-            .foregroundStyle(IDKTheme.ink.opacity(0.7))
-            .padding(.horizontal, 16)
-            .padding(.vertical, 9)
-            .background(
-                Capsule()
-                    .fill(.ultraThinMaterial)
-                    .overlay(Capsule().fill(Color.white.opacity(0.30)))
-            )
-            .overlay(Capsule().strokeBorder(IDKTheme.silverStroke, lineWidth: 1))
-            .shadow(color: IDKTheme.silverDark.opacity(0.2), radius: 8, y: 4)
+            .foregroundStyle(JokerTheme.text.opacity(0.85))
+            .padding(.horizontal, 18)
+            .padding(.vertical, 10)
+            .background(Capsule().fill(Color.white.opacity(0.08)))
+            .overlay(Capsule().strokeBorder(JokerTheme.cardStroke, lineWidth: 1))
         }
         .opacity(appeared ? 1 : 0)
         .animation(.easeOut(duration: 0.4).delay(0.4), value: appeared)
         .sheet(isPresented: $showAdvancedSettings) {
             SettingsView()
         }
-    }
-    
-    // MARK: - Footer
-    
-    private var footerSection: some View {
-        Text(madeBy)
-            .font(.system(size: 11, weight: .medium))
-            .foregroundStyle(IDKTheme.inkSoft)
-            .shadow(color: Color.white.opacity(0.9), radius: 4)
-            .opacity(appeared ? 1 : 0)
-            .animation(.easeOut(duration: 0.4).delay(0.5), value: appeared)
     }
 }
 
