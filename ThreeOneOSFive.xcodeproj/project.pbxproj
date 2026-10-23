@@ -89,7 +89,6 @@
 		3105M211 /* AnnouncementsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3105M111; };
 		3105M212 /* AnnouncementBanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3105M112; };
 		3105M213 /* AnnouncementPopup.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3105M113; };
-		3105M214 /* JokerDesign.swift in Sources */= {isa= PBXBuildFile; fileRef = 3105M114; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -193,7 +192,6 @@
 		3105M111 /* AnnouncementsStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnnouncementsStore.swift; sourceTree = "<group>"; };
 		3105M112 /* AnnouncementBanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnnouncementBanner.swift; sourceTree = "<group>"; };
 		3105M113 /* AnnouncementPopup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnnouncementPopup.swift; sourceTree = "<group>"; };
-		3105M114 /* JokerDesign.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JokerDesign.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -283,7 +281,6 @@
 				3105M109 /* FrozenKeyView.swift */,
 				3105M112 /* AnnouncementBanner.swift */,
 				3105M113 /* AnnouncementPopup.swift */,
-				3105M114 /* JokerDesign.swift */,
 			);
 			path = views;
 			sourceTree = "<group>";
