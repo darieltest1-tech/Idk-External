@@ -14,8 +14,7 @@ struct SplashView: View {
     @State private var glowPulse = false
     @State private var displayStep: String = "INICIANDO SISTEMA..."
     
-    // MARK: - Nombre modificado
-    private let appName = "IDK"
+    private let appName = "ANGEL EXTERNAL"
     
     init(
         externalProgress: Double = 0,
@@ -29,40 +28,50 @@ struct SplashView: View {
     
     var body: some View {
         ZStack {
-            background
+            JokerBackground()
+            
+            // Resplandor pulsante detrás del logo
+            RadialGradient(
+                colors: [
+                    JokerTheme.accent.opacity(glowPulse ? 0.22 : 0.10),
+                    Color.clear
+                ],
+                center: .init(x: 0.5, y: 0.42),
+                startRadius: 0,
+                endRadius: 320
+            )
+            .ignoresSafeArea()
             
             VStack(spacing: 0) {
                 Spacer()
                 
                 logoSection
                 
-                Spacer().frame(height: 60)
+                Spacer().frame(height: 50)
                 
-                // Nombre (MODIFICADO: colores oscuros para contraste en fondo claro)
                 Text(appName)
-                    .font(.system(size: 32, weight: .heavy, design: .rounded))
+                    .font(.system(size: 28, weight: .heavy, design: .rounded))
                     .tracking(4)
-                    .foregroundStyle(
-                        LinearGradient(
-                            colors: [
-                                Color(red: 0.2, green: 0.2, blue: 0.2), // Gris oscuro
-                                Color(red: 0.4, green: 0.4, blue: 0.4)   // Gris medio
-                            ],
-                            startPoint: .top,
-                            endPoint: .bottom
-                        )
-                    )
-                    .shadow(color: .black.opacity(0.1), radius: 8)
+                    .foregroundStyle(JokerTheme.text)
+                    .shadow(color: JokerTheme.accent.opacity(0.35), radius: 10)
                     .opacity(appeared ? 1 : 0)
                     .animation(.easeOut(duration: 0.5).delay(0.2), value: appeared)
                 
-                Spacer().frame(height: 20)
+                Spacer().frame(height: 6)
+                
+                Text("PATCH LIBRARY")
+                    .font(.system(size: 11, weight: .semibold))
+                    .tracking(3)
+                    .foregroundStyle(JokerTheme.textSoft)
+                    .opacity(appeared ? 1 : 0)
+                
+                Spacer().frame(height: 26)
                 
                 // 🎯 Texto dinámico (paso actual)
                 Text(displayStep)
                     .font(.system(size: 11, weight: .bold))
                     .tracking(3)
-                    .foregroundStyle(Color.black.opacity(0.6)) // Texto oscuro
+                    .foregroundStyle(JokerTheme.accent)
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, 40)
                     .frame(height: 20)
@@ -83,11 +92,16 @@ struct SplashView: View {
                 Text("\(Int(displayProgress * 100))%")
                     .font(.system(size: 10, weight: .bold, design: .monospaced))
                     .tracking(2)
-                    .foregroundStyle(Color.black.opacity(0.5)) // Texto oscuro
+                    .foregroundStyle(JokerTheme.textSoft)
                     .opacity(appeared ? 1 : 0)
                 
                 Spacer()
                 Spacer()
+                
+                JokerSignature()
+                    .opacity(appeared ? 1 : 0)
+                    .animation(.easeOut(duration: 0.5).delay(0.4), value: appeared)
+                    .padding(.bottom, 16)
             }
         }
         .onAppear {
@@ -105,40 +119,7 @@ struct SplashView: View {
         }
     }
     
-    // MARK: - Background (MODIFICADO: Tonos claros)
-    
-    private var background: some View {
-        ZStack {
-            // Fondo base: Blanco hueso / Perla claro
-            Color(red: 0.93, green: 0.91, blue: 0.88)
-                .ignoresSafeArea()
-            
-            // Gradiente radial: Brillo blanco puro en el centro
-            RadialGradient(
-                colors: [
-                    Color.white.opacity(glowPulse ? 0.9 : 0.6),
-                    Color.clear
-                ],
-                center: .init(x: 0.5, y: 0.45),
-                startRadius: 0,
-                endRadius: 350
-            )
-            .ignoresSafeArea()
-            
-            // Gradiente sutil beige en la parte inferior
-            LinearGradient(
-                colors: [
-                    Color.clear,
-                    Color(red: 0.85, green: 0.82, blue: 0.78).opacity(0.4)
-                ],
-                startPoint: .top,
-                endPoint: .bottom
-            )
-            .ignoresSafeArea()
-        }
-    }
-    
-    // MARK: - Logo Section (MODIFICADO: Acentos perla/blancos)
+    // MARK: - Logo Section
     
     private var logoSection: some View {
         ZStack {
@@ -147,7 +128,7 @@ struct SplashView: View {
                 .fill(
                     RadialGradient(
                         colors: [
-                            Color.white.opacity(glowPulse ? 0.8 : 0.4),
+                            JokerTheme.accent.opacity(glowPulse ? 0.30 : 0.14),
                             Color.clear
                         ],
                         center: .center,
@@ -157,7 +138,7 @@ struct SplashView: View {
                 )
                 .frame(width: 260, height: 260)
             
-            // Anillo de puntos girando (MODIFICADO: puntos oscuros/perla)
+            // Anillo de puntos girando
             ForEach(0..<28, id: \.self) { i in
                 let angle = (Double(i) / 28.0) * 360.0
                 let isHighlighted = i % 7 == 0
@@ -165,15 +146,15 @@ struct SplashView: View {
                 Circle()
                     .fill(
                         isHighlighted
-                            ? Color(red: 0.2, green: 0.2, blue: 0.2).opacity(0.9) // Punto oscuro
-                            : Color.black.opacity(0.2) // Punto gris suave
+                            ? JokerTheme.accent
+                            : JokerTheme.bone.opacity(0.30)
                     )
                     .frame(
                         width: isHighlighted ? 4 : 2.5,
                         height: isHighlighted ? 4 : 2.5
                     )
                     .shadow(
-                        color: isHighlighted ? .black.opacity(0.2) : .clear,
+                        color: isHighlighted ? JokerTheme.accent.opacity(0.7) : .clear,
                         radius: isHighlighted ? 4 : 0
                     )
                     .offset(y: -95)
@@ -182,42 +163,17 @@ struct SplashView: View {
             
             // Anillo conector
             Circle()
-                .stroke(Color.black.opacity(0.15), lineWidth: 0.5)
+                .stroke(JokerTheme.bone.opacity(0.18), lineWidth: 0.5)
                 .frame(width: 190, height: 190)
                 .rotationEffect(.degrees(rotationAngle * 0.5))
             
-            // Círculo con gradiente (MODIFICADO: perla/blanco)
-            Circle()
-                .stroke(
-                    LinearGradient(
-                        colors: [
-                            Color.white,
-                            Color(red: 0.9, green: 0.85, blue: 0.8)
-                        ],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    ),
-                    lineWidth: 2
-                )
-                .frame(width: 120, height: 120)
-                .shadow(color: Color.white.opacity(0.8), radius: 15)
-            
             // Círculo decorativo
             Circle()
-                .stroke(Color.black.opacity(0.15), lineWidth: 0.5)
-                .frame(width: 140, height: 140)
+                .stroke(JokerTheme.bone.opacity(0.18), lineWidth: 0.5)
+                .frame(width: 148, height: 148)
             
-            // Logo
-            Image("Logo")
-                .resizable()
-                .scaledToFit()
-                .frame(width: 100, height: 100)
-                .clipShape(Circle())
-                .overlay(
-                    Circle()
-                        .stroke(Color.white.opacity(0.8), lineWidth: 0.5)
-                )
-                .shadow(color: .black.opacity(0.1), radius: 10)
+            // Icono con la foto del Joker
+            JokerAppIcon(size: 104)
         }
         .frame(height: 260)
         .opacity(appeared ? 1 : 0)
@@ -225,28 +181,18 @@ struct SplashView: View {
         .animation(.easeOut(duration: 0.6), value: appeared)
     }
     
-    // MARK: - Progress Bar (MODIFICADO: Estilo claro)
+    // MARK: - Progress Bar
     
     private var progressBar: some View {
         ZStack(alignment: .leading) {
             Capsule()
-                .fill(Color.black.opacity(0.08)) // Fondo de la barra
+                .fill(Color.white.opacity(0.10))
                 .frame(height: 4)
             
             Capsule()
-                .fill(
-                    LinearGradient(
-                        colors: [
-                            Color(red: 0.2, green: 0.2, blue: 0.2).opacity(0.6), // Gris oscuro
-                            Color(red: 0.2, green: 0.2, blue: 0.2),              // Negro suave
-                            Color(red: 0.4, green: 0.4, blue: 0.4).opacity(0.8)   // Gris medio
-                        ],
-                        startPoint: .leading,
-                        endPoint: .trailing
-                    )
-                )
+                .fill(JokerTheme.accentGradient)
                 .frame(width: displayProgress * 220, height: 4)
-                .shadow(color: .black.opacity(0.2), radius: 6)
+                .shadow(color: JokerTheme.accent.opacity(0.6), radius: 6)
         }
         .frame(width: 220)
     }

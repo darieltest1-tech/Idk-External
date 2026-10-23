@@ -1,66 +1,6 @@
 import SwiftUI
 import UIKit
 
-// MARK: - Tema visual (plata / hielo, combina con el fondo)
-
-private enum IDKTheme {
-    /// Nombre del asset de la imagen de fondo (Assets.xcassets)
-    static let backgroundImageName = "IDKBackground"
-
-    static let ink = Color(red: 0.09, green: 0.11, blue: 0.17)
-    static let inkSoft = Color(red: 0.09, green: 0.11, blue: 0.17).opacity(0.55)
-    static let inkFaint = Color(red: 0.09, green: 0.11, blue: 0.17).opacity(0.35)
-
-    static let silverLight = Color.white
-    static let silverMid = Color(red: 0.80, green: 0.83, blue: 0.88)
-    static let silverDark = Color(red: 0.55, green: 0.60, blue: 0.68)
-
-    static let accent = Color(red: 0.28, green: 0.52, blue: 0.86)
-
-    static var silverStroke: LinearGradient {
-        LinearGradient(
-            colors: [silverLight.opacity(0.95), silverMid.opacity(0.55), silverLight.opacity(0.85)],
-            startPoint: .topLeading,
-            endPoint: .bottomTrailing
-        )
-    }
-}
-
-// MARK: - Estilo "cristal" reutilizable
-
-private struct IDKGlass: ViewModifier {
-    var radius: CGFloat = 16
-    var tint: Color = Color.white.opacity(0.30)
-    var strokeColor: AnyShapeStyle = AnyShapeStyle(IDKTheme.silverStroke)
-    var strokeWidth: CGFloat = 1
-
-    func body(content: Content) -> some View {
-        content
-            .background(
-                RoundedRectangle(cornerRadius: radius, style: .continuous)
-                    .fill(.ultraThinMaterial)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: radius, style: .continuous)
-                            .fill(tint)
-                    )
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: radius, style: .continuous)
-                    .strokeBorder(strokeColor, lineWidth: strokeWidth)
-            )
-            .shadow(color: IDKTheme.silverDark.opacity(0.25), radius: 12, x: 0, y: 6)
-    }
-}
-
-private extension View {
-    func idkGlass(radius: CGFloat = 16,
-                  tint: Color = Color.white.opacity(0.30),
-                  stroke: AnyShapeStyle = AnyShapeStyle(IDKTheme.silverStroke),
-                  strokeWidth: CGFloat = 1) -> some View {
-        modifier(IDKGlass(radius: radius, tint: tint, strokeColor: stroke, strokeWidth: strokeWidth))
-    }
-}
-
 // MARK: - Login
 
 struct LoginView: View {
@@ -77,7 +17,7 @@ struct LoginView: View {
     
     var body: some View {
         ZStack {
-            background
+            JokerBackground()
             
             GeometryReader { geo in
                 ScrollView(showsIndicators: false) {
@@ -86,15 +26,16 @@ struct LoginView: View {
                         
                         topBadge
                         
-                        // Empuja el formulario hacia abajo para dejar ver
-                        // al ángel y el logo de la imagen de fondo
+                        // Deja ver la foto del Joker arriba
                         Spacer(minLength: 200)
                         
                         loginPanel
                         
-                        Spacer().frame(height: 24)
+                        Spacer().frame(height: 20)
                         
-                        footerSection
+                        JokerSignature()
+                            .opacity(appeared ? 1 : 0)
+                            .animation(.easeOut(duration: 0.6).delay(0.5), value: appeared)
                         
                         Spacer().frame(height: 24)
                     }
@@ -115,65 +56,28 @@ struct LoginView: View {
         }
     }
     
-    // MARK: - Background (imagen fija de fondo)
-    
-    private var background: some View {
-        ZStack {
-            // Color base por si la imagen no carga
-            Color(red: 0.88, green: 0.90, blue: 0.94)
-                .ignoresSafeArea()
-            
-            // Imagen a pantalla completa, sin deformarse
-            Color.clear
-                .overlay(
-                    Image(IDKTheme.backgroundImageName)
-                        .resizable()
-                        .scaledToFill()
-                )
-                .clipped()
-                .ignoresSafeArea()
-            
-            // Velo suave abajo para que el formulario se lea bien
-            LinearGradient(
-                stops: [
-                    .init(color: Color.white.opacity(0.0), location: 0.0),
-                    .init(color: Color.white.opacity(0.08), location: 0.5),
-                    .init(color: Color.white.opacity(0.35), location: 1.0)
-                ],
-                startPoint: .top,
-                endPoint: .bottom
-            )
-            .ignoresSafeArea()
-        }
-    }
-    
     // MARK: - Top Badge
     
     private var topBadge: some View {
         HStack(spacing: 6) {
             Circle()
-                .fill(Color(red: 0.2, green: 0.6, blue: 0.2))
+                .fill(JokerTheme.ok)
                 .frame(width: 6, height: 6)
-                .shadow(color: Color(red: 0.2, green: 0.6, blue: 0.2).opacity(0.6), radius: 4)
+                .shadow(color: JokerTheme.ok.opacity(0.7), radius: 4)
             Text("SISTEMA ACTIVO")
-                .font(.system(size: 10, weight: .bold))
+                .font(.system(size: 10, weight: .heavy))
                 .tracking(2)
-                .foregroundStyle(IDKTheme.ink.opacity(0.8))
+                .foregroundStyle(JokerTheme.text.opacity(0.85))
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 7)
-        .background(
-            Capsule()
-                .fill(.ultraThinMaterial)
-                .overlay(Capsule().fill(Color.white.opacity(0.30)))
-        )
-        .overlay(Capsule().strokeBorder(IDKTheme.silverStroke, lineWidth: 1))
-        .shadow(color: IDKTheme.silverDark.opacity(0.25), radius: 8, y: 4)
+        .background(Capsule().fill(JokerTheme.cardBase.opacity(0.85)))
+        .overlay(Capsule().strokeBorder(JokerTheme.cardStroke, lineWidth: 1))
         .opacity(appeared ? 1 : 0)
         .animation(.easeOut(duration: 0.5).delay(0.1), value: appeared)
     }
     
-    // MARK: - Panel de login (todo el formulario en una tarjeta de cristal)
+    // MARK: - Panel de login
     
     private var loginPanel: some View {
         VStack(spacing: 18) {
@@ -194,89 +98,57 @@ struct LoginView: View {
         .padding(.horizontal, 18)
         .padding(.top, 22)
         .padding(.bottom, 20)
-        .idkGlass(radius: 28, tint: Color.white.opacity(0.38))
+        .jokerCard(radius: 28)
         .padding(.horizontal, 20)
         .opacity(appeared ? 1 : 0)
         .offset(y: appeared ? 0 : 24)
         .animation(.easeOut(duration: 0.6).delay(0.25), value: appeared)
     }
     
-    // MARK: - Panel Header (logo pequeño + nombre)
+    // MARK: - Panel Header
     
     private var panelHeader: some View {
-        VStack(spacing: 10) {
+        VStack(spacing: 12) {
             ZStack {
                 Circle()
                     .fill(
                         RadialGradient(
                             colors: [
-                                Color.white.opacity(glowAnimation ? 0.95 : 0.6),
+                                JokerTheme.accent.opacity(glowAnimation ? 0.35 : 0.15),
                                 Color.clear
                             ],
                             center: .center,
                             startRadius: 14,
-                            endRadius: 52
+                            endRadius: 56
                         )
                     )
-                    .frame(width: 104, height: 104)
+                    .frame(width: 112, height: 112)
                 
                 Circle()
                     .stroke(
                         AngularGradient(
                             colors: [
-                                Color.white.opacity(0),
-                                Color.white.opacity(0.95),
-                                Color.white.opacity(0),
-                                IDKTheme.silverMid.opacity(0.9),
-                                Color.white.opacity(0)
+                                JokerTheme.accent.opacity(0),
+                                JokerTheme.accent.opacity(0.9),
+                                JokerTheme.accent.opacity(0),
+                                JokerTheme.bone.opacity(0.6),
+                                JokerTheme.accent.opacity(0)
                             ],
                             center: .center
                         ),
                         style: StrokeStyle(lineWidth: 1.5, dash: [4, 8])
                     )
-                    .frame(width: 84, height: 84)
+                    .frame(width: 92, height: 92)
                     .rotationEffect(.degrees(rotationAngle))
                 
-                Circle()
-                    .strokeBorder(IDKTheme.silverStroke, lineWidth: 2.5)
-                    .frame(width: 66, height: 66)
-                    .shadow(color: Color.white.opacity(0.9), radius: glowAnimation ? 14 : 6)
-                
-                Image("Logo")
-                    .resizable()
-                    .scaledToFit()
-                    .frame(width: 52, height: 52)
-                    .clipShape(Circle())
-                    .shadow(color: .black.opacity(0.15), radius: 4)
+                JokerAppIcon(size: 66)
             }
-            .frame(height: 100)
+            .frame(height: 108)
             
-            HStack(spacing: 8) {
-                Rectangle()
-                    .fill(
-                        LinearGradient(
-                            colors: [.clear, IDKTheme.ink.opacity(0.4), .clear],
-                            startPoint: .leading,
-                            endPoint: .trailing
-                        )
-                    )
-                    .frame(width: 36, height: 1)
-                
-                Text("IDK EXTERNAL")
-                    .font(.system(size: 12, weight: .heavy, design: .rounded))
-                    .tracking(4)
-                    .foregroundStyle(IDKTheme.ink.opacity(0.8))
-                
-                Rectangle()
-                    .fill(
-                        LinearGradient(
-                            colors: [.clear, IDKTheme.ink.opacity(0.4), .clear],
-                            startPoint: .leading,
-                            endPoint: .trailing
-                        )
-                    )
-                    .frame(width: 36, height: 1)
-            }
+            Text("ANGEL EXTERNAL")
+                .font(.system(size: 18, weight: .heavy, design: .rounded))
+                .tracking(3)
+                .foregroundStyle(JokerTheme.text)
         }
     }
     
@@ -286,34 +158,28 @@ struct LoginView: View {
         HStack(spacing: 12) {
             ZStack {
                 Circle()
-                    .fill(
-                        LinearGradient(
-                            colors: [Color.white.opacity(0.95), IDKTheme.silverMid.opacity(0.7)],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
-                    )
-                    .overlay(Circle().strokeBorder(IDKTheme.silverStroke, lineWidth: 1))
+                    .fill(JokerTheme.accent.opacity(0.15))
+                    .overlay(Circle().strokeBorder(JokerTheme.accent.opacity(0.4), lineWidth: 1))
                     .frame(width: 40, height: 40)
                 Image(systemName: "lock.shield.fill")
                     .font(.system(size: 18, weight: .semibold))
-                    .foregroundStyle(IDKTheme.accent)
+                    .foregroundStyle(JokerTheme.accent)
             }
             
             VStack(alignment: .leading, spacing: 3) {
                 Text("Acceso restringido")
-                    .font(.system(size: 13, weight: .bold))
-                    .foregroundStyle(IDKTheme.ink)
+                    .font(.system(size: 14, weight: .bold))
+                    .foregroundStyle(JokerTheme.text)
                 Text("Introduce tu clave para continuar")
-                    .font(.system(size: 11, weight: .medium))
-                    .foregroundStyle(IDKTheme.inkSoft)
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundStyle(JokerTheme.textSoft)
             }
             
             Spacer()
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 12)
-        .idkGlass(radius: 16, tint: Color.white.opacity(0.25))
+        .jokerCard(radius: 16, fill: Color.white.opacity(0.04))
     }
     
     // MARK: - Password Field
@@ -321,37 +187,38 @@ struct LoginView: View {
     private var passwordField: some View {
         HStack(spacing: 12) {
             Image(systemName: "key.fill")
-                .foregroundStyle(IDKTheme.ink.opacity(0.7))
+                .foregroundStyle(JokerTheme.bone.opacity(0.8))
                 .font(.system(size: 15))
             
-            SecureField("Introduce tu clave...", text: $password)
-                .textFieldStyle(.plain)
-                .foregroundStyle(IDKTheme.ink)
-                .autocorrectionDisabled()
-                .textInputAutocapitalization(.never)
-                .submitLabel(.go)
-                .onSubmit(attemptLogin)
-                .disabled(isVerifying)
+            SecureField(
+                "",
+                text: $password,
+                prompt: Text("Introduce tu clave...").foregroundStyle(JokerTheme.textFaint)
+            )
+            .textFieldStyle(.plain)
+            .foregroundStyle(JokerTheme.text)
+            .autocorrectionDisabled()
+            .textInputAutocapitalization(.never)
+            .submitLabel(.go)
+            .onSubmit(attemptLogin)
+            .disabled(isVerifying)
             
             if !password.isEmpty && !isVerifying {
                 Button {
                     password = ""
                 } label: {
                     Image(systemName: "xmark.circle.fill")
-                        .foregroundStyle(IDKTheme.inkFaint)
+                        .foregroundStyle(JokerTheme.textFaint)
                         .font(.system(size: 14))
                 }
             }
         }
         .padding(.horizontal, 18)
         .padding(.vertical, 16)
-        .idkGlass(
+        .jokerCard(
             radius: 16,
-            tint: Color.white.opacity(0.55),
-            stroke: showError
-                ? AnyShapeStyle(Color.red.opacity(0.6))
-                : AnyShapeStyle(IDKTheme.silverStroke),
-            strokeWidth: showError ? 1.5 : 1
+            stroke: showError ? JokerTheme.danger.opacity(0.7) : JokerTheme.cardStroke,
+            fill: Color.white.opacity(0.08)
         )
         .offset(x: shakeOffset)
     }
@@ -363,7 +230,7 @@ struct LoginView: View {
             HStack(spacing: 10) {
                 if isVerifying {
                     ProgressView()
-                        .tint(.white)
+                        .tint(.black)
                         .scaleEffect(0.9)
                     Text("VERIFICANDO...")
                         .font(.system(size: 15, weight: .heavy))
@@ -376,33 +243,13 @@ struct LoginView: View {
                         .tracking(2)
                 }
             }
-            .foregroundStyle(.white)
+            .foregroundStyle(Color.black.opacity(0.88))
             .frame(maxWidth: .infinity)
             .padding(.vertical, 16)
             .background(
-                RoundedRectangle(cornerRadius: 16, style: .continuous)
-                    .fill(
-                        LinearGradient(
-                            colors: [
-                                Color(red: 0.16, green: 0.20, blue: 0.30),
-                                Color(red: 0.09, green: 0.11, blue: 0.17)
-                            ],
-                            startPoint: .top,
-                            endPoint: .bottom
-                        )
-                    )
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 16, style: .continuous)
-                            .strokeBorder(
-                                LinearGradient(
-                                    colors: [Color.white.opacity(0.55), Color.white.opacity(0.05)],
-                                    startPoint: .top,
-                                    endPoint: .bottom
-                                ),
-                                lineWidth: 1
-                            )
-                    )
-                    .shadow(color: IDKTheme.accent.opacity(0.35), radius: 14, y: 6)
+                Capsule()
+                    .fill(JokerTheme.accentGradient)
+                    .shadow(color: JokerTheme.accent.opacity(0.4), radius: 14, y: 6)
             )
         }
         .disabled(password.isEmpty || isVerifying)
@@ -420,13 +267,13 @@ struct LoginView: View {
             Text(errorMessage)
                 .font(.system(size: 12, weight: .semibold))
         }
-        .foregroundStyle(Color(red: 0.78, green: 0.25, blue: 0.25))
+        .foregroundStyle(JokerTheme.danger)
         .padding(.horizontal, 12)
         .padding(.vertical, 7)
         .background(
             Capsule()
-                .fill(Color.white.opacity(0.65))
-                .overlay(Capsule().stroke(Color.red.opacity(0.25), lineWidth: 1))
+                .fill(JokerTheme.danger.opacity(0.12))
+                .overlay(Capsule().stroke(JokerTheme.danger.opacity(0.35), lineWidth: 1))
         )
         .transition(.opacity.combined(with: .move(edge: .top)))
     }
@@ -435,9 +282,9 @@ struct LoginView: View {
     
     private var statusIndicators: some View {
         HStack(spacing: 20) {
-            statusDot(color: supabase.isConnected ? Color(red: 0.2, green: 0.6, blue: 0.2) : .gray, label: "Online")
-            statusDot(color: IDKTheme.accent.opacity(0.8), label: "v2.0")
-            statusDot(color: IDKTheme.silverDark, label: "Beta")
+            statusDot(color: supabase.isConnected ? JokerTheme.ok : .gray, label: "Online")
+            statusDot(color: JokerTheme.accent, label: "v2.0")
+            statusDot(color: JokerTheme.bone.opacity(0.6), label: "Beta")
         }
     }
     
@@ -449,24 +296,8 @@ struct LoginView: View {
                 .shadow(color: color.opacity(0.6), radius: 3)
             Text(label)
                 .font(.system(size: 10, weight: .semibold))
-                .foregroundStyle(IDKTheme.inkSoft)
+                .foregroundStyle(JokerTheme.textSoft)
         }
-    }
-    
-    // MARK: - Footer
-    
-    private var footerSection: some View {
-        HStack(spacing: 6) {
-            Image(systemName: "hammer.fill")
-                .font(.system(size: 9))
-                .foregroundStyle(IDKTheme.inkSoft)
-            Text("Hecho por didierxitx7")
-                .font(.system(size: 11, weight: .medium))
-                .foregroundStyle(IDKTheme.inkSoft)
-        }
-        .shadow(color: Color.white.opacity(0.9), radius: 4)
-        .opacity(appeared ? 1 : 0)
-        .animation(.easeOut(duration: 0.6).delay(0.5), value: appeared)
     }
     
     // MARK: - Login Logic (SIN CAMBIOS)
