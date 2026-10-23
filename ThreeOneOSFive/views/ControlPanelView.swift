@@ -1140,20 +1140,20 @@ struct JokerSignature: View {
     var body: some View {
         HStack(spacing: 4) {
             Text("Hecho por")
-                .foregroundStyle(JokerTheme.textSoft)
+                .foregroundColor(JokerTheme.textSoft)
 
             Link(destination: URL(string: "https://t.me/didierxit7")!) {
                 Text("@didierxit7")
-                    .foregroundStyle(JokerTheme.accent)
+                    .foregroundColor(JokerTheme.accent)
                     .underline()
             }
 
             Text("y")
-                .foregroundStyle(JokerTheme.textSoft)
+                .foregroundColor(JokerTheme.textSoft)
 
             Link(destination: URL(string: "https://t.me/Angel333_57")!) {
                 Text("@angelx7")
-                    .foregroundStyle(JokerTheme.accent)
+                    .foregroundColor(JokerTheme.accent)
                     .underline()
             }
         }

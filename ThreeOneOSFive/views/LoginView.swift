@@ -193,7 +193,7 @@ struct LoginView: View {
             SecureField(
                 "",
                 text: $password,
-                prompt: Text("Introduce tu clave...").foregroundStyle(JokerTheme.textFaint)
+                prompt: Text("Introduce tu clave...").foregroundColor(JokerTheme.textFaint)
             )
             .textFieldStyle(.plain)
             .foregroundStyle(JokerTheme.text)
